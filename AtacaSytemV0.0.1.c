@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <locale.h>
 
+void login(){
+	
+}
+
 int main(){
 	setlocale(LC_ALL, "Portuguese");
 	
@@ -15,5 +19,6 @@ int main(){
         printf("\t\t\t\t                   2- Desenvolvedores                             \n");
         printf("\t\t\t\t                   3- Sair                        \n");
         printf("\t\t\t\t                                                       \n");
-        printf("\t\t\t\t                   Opção: ");
+        printf("\t\t\t\t                   OpÃ§Ã£o: ");
 }
+
