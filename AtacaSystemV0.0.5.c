@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <conio.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "AtacaSystemMenu.c"
 
@@ -28,7 +29,7 @@ void menu(){
 	int choice;
 	
 	do{
-        printf("Escolha uma opÁ„o: \n");
+        printf("Escolha uma op√ß√£o: \n");
         printf("1 - Cadastrar Produto\n");
         printf("2 - Listar Produtos\n");
         printf("3 - Buscar Produto\n");
@@ -49,7 +50,7 @@ void menu(){
                 printf("Saindo...\n");
                 break;
             default:
-                printf("OpÁ„o inv·lida! Tente novamente.\n");
+                printf("Op√ß√£o inv√°lida! Tente novamente.\n");
                 break;
         }
 	}while(choice != 4);
