@@ -5,7 +5,6 @@
 #include <locale.h>
 #include "AtacaSystemMenu.c"
 
-
 #define MAX_USERS 100
 #define MAX_FUNCIONARIOS 100
 #define USERNAME_MAX_LENGTH 50
@@ -14,7 +13,6 @@
 #define MAX_PRODUCTS 100
 #define PRODUCT_NAME_MAX_LENGTH 50
 
-
 typedef struct {
     char username[USERNAME_MAX_LENGTH];
     char password[PASSWORD_MAX_LENGTH];
@@ -22,16 +20,16 @@ typedef struct {
 
 typedef struct {
     char name[30];
-    char username[8];
-    char password[8];
+    char username[USERNAME_MAX_LENGTH];
+    char password[PASSWORD_MAX_LENGTH];
 } Funcionario;
 
 typedef struct {
     char name[30];
-    char ID[14]; 
+    char ID[14];
     float price;
+    int amount;
 } Product;
-
 
 User users[MAX_USERS];
 Funcionario funcionarios[MAX_FUNCIONARIOS];
@@ -42,12 +40,10 @@ int produtoCount = 0;
 const char *chefeUsername = "chefe";
 const char *chefePassword = "senha123";
 
-
 void clearInputBuffer() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF) { }
 }
-
 
 int isValidUsername(const char *username) {
     if (strlen(username) == 0) {
@@ -63,7 +59,6 @@ int isValidUsername(const char *username) {
     return 1;
 }
 
-
 int isValidPassword(const char *password) {
     if (strlen(password) < MIN_PASSWORD_LENGTH) {
         printf("Erro: A senha deve ter pelo menos %d caracteres.\n", MIN_PASSWORD_LENGTH);
@@ -72,35 +67,30 @@ int isValidPassword(const char *password) {
     return 1;
 }
 
-
 void registerUser(User users[], int *userCount) {
     char username[USERNAME_MAX_LENGTH];
     char password[PASSWORD_MAX_LENGTH];
 
     printf("Cadastrar Novo Usuario\n");
 
-    
     do {
         printf("Username: ");
         scanf("%49s", username);
         clearInputBuffer();
     } while (!isValidUsername(username));
 
-    
     do {
         printf("Password: ");
         scanf("%49s", password);
         clearInputBuffer();
     } while (!isValidPassword(password));
 
-    
     strcpy(users[*userCount].username, username);
     strcpy(users[*userCount].password, password);
 
     (*userCount)++;
     printf("Usuario cadastrado com sucesso!\n");
 }
-
 
 void displayUsers(const User users[], int userCount) {
     printf("Lista de Usuarios:\n");
@@ -111,7 +101,6 @@ void displayUsers(const User users[], int userCount) {
     }
 }
 
-
 void displayEmployees(const Funcionario funcionarios[], int funcionarioCount) {
     printf("Lista de Funcionários:\n");
     for (int i = 0; i < funcionarioCount; i++) {
@@ -121,7 +110,6 @@ void displayEmployees(const Funcionario funcionarios[], int funcionarioCount) {
         printf("Password: %s\n", funcionarios[i].password);
     }
 }
-
 
 int authenticateUser(const char *expectedUsername, const char *expectedPassword) {
     char username[USERNAME_MAX_LENGTH];
@@ -137,7 +125,6 @@ int authenticateUser(const char *expectedUsername, const char *expectedPassword)
     
     return strcmp(username, expectedUsername) == 0 && strcmp(password, expectedPassword) == 0;
 }
-
 
 void editUser(User users[], int userCount) {
     int userIndex;
@@ -167,13 +154,11 @@ void editUser(User users[], int userCount) {
         clearInputBuffer();
     } while (!isValidPassword(password));
 
-    
     strcpy(users[userIndex].username, username);
     strcpy(users[userIndex].password, password);
 
     printf("Usuario editado com sucesso!\n");
 }
-
 
 void deleteUser(User users[], int *userCount) {
     int userIndex;
@@ -189,7 +174,6 @@ void deleteUser(User users[], int *userCount) {
         return;
     }
 
-    
     for (int i = userIndex; i < *userCount - 1; i++) {
         users[i] = users[i + 1];
     }
@@ -197,7 +181,6 @@ void deleteUser(User users[], int *userCount) {
     (*userCount)--;
     printf("Usuario excluído com sucesso!\n");
 }
-
 
 void chefeMenu(User users[], int *userCount, Funcionario funcionarios[], int *funcionarioCount) {
     int option;
@@ -208,7 +191,7 @@ void chefeMenu(User users[], int *userCount, Funcionario funcionarios[], int *fu
         printf("2. Editar Funcionário\n");
         printf("3. Excluir Funcionário\n");
         printf("4. Voltar ao Menu Principal\n");
-        printf("Escolha uma opcao: ");
+        printf("Escolha uma opção: ");
         scanf("%d", &option);
         clearInputBuffer();
         system("cls");
@@ -244,11 +227,10 @@ void chefeMenu(User users[], int *userCount, Funcionario funcionarios[], int *fu
             case 4:
                 return;
             default:
-                printf("Opcao invalida! Tente novamente.\n");
+                printf("Opção inválida! Tente novamente.\n");
         }
     }
 }
-
 
 void displayProducts(const Product produtos[], int produtoCount) {
     printf("Lista de Produtos:\n");
@@ -260,7 +242,6 @@ void displayProducts(const Product produtos[], int produtoCount) {
         printf("\t\n");
     }
 }
-
 
 void searchProduct(const Product produtos[], int produtoCount) {
     char searchName[PRODUCT_NAME_MAX_LENGTH];
@@ -280,7 +261,6 @@ void searchProduct(const Product produtos[], int produtoCount) {
     }
     printf("Produto não encontrado.\n");
 }
-
 
 void editProduct(Product produtos[], int produtoCount) {
     int produtoIndex;
@@ -311,14 +291,12 @@ void editProduct(Product produtos[], int produtoCount) {
     scanf("%f", &price);
     clearInputBuffer();
 
-    
     strcpy(produtos[produtoIndex].name, name);
     strcpy(produtos[produtoIndex].ID, ID);
     produtos[produtoIndex].price = price;
 
     printf("Produto editado com sucesso!\n");
 }
-
 
 void deleteProduct(Product produtos[], int *produtoCount) {
     int produtoIndex;
@@ -334,7 +312,6 @@ void deleteProduct(Product produtos[], int *produtoCount) {
         return;
     }
 
-    
     for (int i = produtoIndex; i < *produtoCount - 1; i++) {
         produtos[i] = produtos[i + 1];
     }
@@ -343,6 +320,104 @@ void deleteProduct(Product produtos[], int *produtoCount) {
     printf("Produto excluído com sucesso!\n");
 }
 
+void registerProduct() {
+    Product produto; 
+
+    printf("Nome: ");
+    fgets(produto.name, sizeof(produto.name), stdin);
+    produto.name[strcspn(produto.name, "\n")] = '\0'; 
+
+    printf("Crie uma IDentificação: ");
+    scanf("%13s", produto.ID);
+    clearInputBuffer();
+
+    printf("Crie um preço: ");
+    scanf("%f", &produto.price);
+    clearInputBuffer();
+
+    if (produtoCount < MAX_PRODUCTS) {
+        produtos[produtoCount] = produto;
+        produtoCount++;
+        printf("Produto cadastrado com sucesso!\n");
+    } else {
+        printf("Limite de produtos atingido!\n");
+    }
+}
+
+int findProductIndexByID(const Product produtos[], int produtoCount, const char *ID) {
+    for (int i = 0; i < produtoCount; i++) {
+        if (strcmp(produtos[i].ID, ID) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void sellProduct(Product produtos[], int produtoCount) {
+    char productID[14];
+    int quantity;
+
+    printf("Venda de Produto\n");
+    printf("Digite o ID do produto: ");
+    scanf("%13s", productID);
+    clearInputBuffer();
+
+    int productIndex = findProductIndexByID(produtos, produtoCount, productID);
+    if (productIndex == -1) {
+        printf("Produto não encontrado.\n");
+        return;
+    }
+
+    printf("Produto encontrado:\n");
+    printf("Nome: %s\n", produtos[productIndex].name);
+    printf("Preço: %.2f\n", produtos[productIndex].price);
+    printf("Estoque: %d\n", produtos[productIndex].amount);
+
+    printf("Digite a quantidade que deseja vender: ");
+    scanf("%d", &quantity);
+    clearInputBuffer();
+
+    if (quantity > produtos[productIndex].amount) {
+        printf("Quantidade indisponível em estoque.\n");
+        return;
+    }
+
+    float total = produtos[productIndex].price * quantity;
+    produtos[productIndex].amount -= quantity;
+
+    printf("Venda realizada com sucesso!\n");
+    printf("Total da venda: R$ %.2f\n", total);
+}
+
+void menuBox(Product produtos[], int produtoCount) {
+    int option;
+    char choice;
+    while (1) {
+        printf("\nMenu do Caixa:\n");
+        printf("1. Vender Produto\n");
+        printf("2. Voltar ao Menu Principal\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &option);
+        clearInputBuffer();
+        system("cls");
+
+        switch (option) {
+            case 1:
+                do {
+                    sellProduct(produtos, produtoCount);
+                    printf("\nDigite 'c' para continuar vendendo ou 'b' para voltar ao menu anterior: ");
+                    scanf(" %c", &choice);
+                    clearInputBuffer();
+                    system("cls");
+                } while (choice == 'c');
+                break;
+            case 2:
+                return;
+            default:
+                printf("Opção inválida! Tente novamente.\n");
+        }
+    }
+}
 
 void cashierMenu() {
     int option;
@@ -409,7 +484,7 @@ void cashierMenu() {
                 break;
             case 6:
                 do {
-                    // Função de vendas deve ser adicionada aqui
+                    menuBox(produtos, produtoCount);
                     printf("\nDigite 'c' para continuar vendendo ou 'b' para voltar ao menu anterior: ");
                     scanf(" %c", &choice);
                     clearInputBuffer();
@@ -419,11 +494,10 @@ void cashierMenu() {
             case 7:
                 return;
             default:
-                printf("Opcao invalida! Tente novamente.\n");
+                printf("Opção inválida! Tente novamente.\n");
         }
     }
 }
-
 
 void login() {
     int choice;
@@ -442,7 +516,7 @@ void login() {
         if (authenticateUser(chefeUsername, chefePassword)) {
             chefeMenu(users, &userCount, funcionarios, &funcionarioCount);
         } else {
-            printf("Autenticacao falhou! Acesso negado.\n");
+            printf("Autenticação falhou! Acesso negado.\n");
         }
     } else if (choice == 2) {
         cashierMenu();
@@ -450,7 +524,6 @@ void login() {
         printf("Opção inválida!\n");
     }
 }
-
 
 void registerEmployee() {
     Funcionario funcionario; 
@@ -476,33 +549,6 @@ void registerEmployee() {
         printf("Limite de funcionários atingido!\n");
     }
 }
-
-
-void registerProduct() {
-    Product produto; 
-
-    printf("Nome: ");
-    fgets(produto.name, sizeof(produto.name), stdin);
-    produto.name[strcspn(produto.name, "\n")] = '\0'; 
-
-    printf("Crie uma IDentificação: ");
-    scanf("%13s", produto.ID);
-    clearInputBuffer();
-
-    printf("Crie um preço: ");
-    scanf("%f", &produto.price);
-    clearInputBuffer();
-
-    
-    if (produtoCount < MAX_PRODUCTS) {
-        produtos[produtoCount] = produto;
-        produtoCount++;
-        printf("Produto cadastrado com sucesso!\n");
-    } else {
-        printf("Limite de produtos atingido!\n");
-    }
-}
-
 
 void option() {
     int choice;
@@ -561,7 +607,6 @@ void option() {
         system("cls");
     }
 }
-
 
 int main() {
     setlocale(LC_ALL, "Portuguese_Brazil");
