@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <locale.h>
+#include <time.h>
 #include "AtacaSystemMenu.c"
 
 #define MAX_USERS 100
@@ -29,6 +30,7 @@ typedef struct {
     char ID[14];
     float price;
     int amount;
+    char expirationDate[11];
 } Product;
 
 User users[MAX_USERS];
@@ -108,13 +110,15 @@ void displayEmployees(const Funcionario funcionarios[], int funcionarioCount) {
         printf("Nome: %s\n", funcionarios[i].name);
         printf("Username: %s\n", funcionarios[i].username);
         printf("Password: %s\n", funcionarios[i].password);
+        printf("\n");
     }
 }
 
 int authenticateUser(const char *expectedUsername, const char *expectedPassword) {
     char username[USERNAME_MAX_LENGTH];
     char password[PASSWORD_MAX_LENGTH];
-    printf("Autenticacao\n");
+    
+    printf("Autenticação\n");
     printf("Username: ");
     scanf("%49s", username);
     clearInputBuffer();
@@ -122,8 +126,20 @@ int authenticateUser(const char *expectedUsername, const char *expectedPassword)
     scanf("%49s", password);
     clearInputBuffer();
     system("cls");
-    
-    return strcmp(username, expectedUsername) == 0 && strcmp(password, expectedPassword) == 0;
+
+    if ((strcmp(username, expectedUsername) == 0 && strcmp(password, expectedPassword) == 0)) {
+        return 1;
+    }
+
+    // Verifica se o usuário é um caixa registrado
+    for (int i = 0; i < funcionarioCount; i++) {
+        if (strcmp(username, funcionarios[i].username) == 0 && strcmp(password, funcionarios[i].password) == 0) {
+            return 1;
+        }
+    }
+
+    printf("Falha na autenticação. Verifique suas credenciais.\n");
+    return 0;
 }
 
 void editUser(User users[], int userCount) {
@@ -182,6 +198,49 @@ void deleteUser(User users[], int *userCount) {
     printf("Usuario excluído com sucesso!\n");
 }
 
+void commissionis() {
+	char nome[50];
+	float venda;
+	float taxa;
+	float comissao;
+
+	printf("Por favor, informe os dados da venda\n");
+
+	printf("Nome do vendedor: ");
+	scanf("%s", nome);
+
+	printf("Valor das vendas (R$): ");
+	scanf("%f", &venda);
+
+	printf("Taxa em %%: ");
+	scanf("%f", &taxa);
+
+	comissao = venda * taxa / 100;
+
+	printf("\n");
+	printf("|Nome do vendedor: %s\n", nome);
+	printf("|Valor da venda(R$): %.2f\n", venda);
+	printf("|Taxa: %.2f %%\n", taxa);
+	printf("|Comissão a pagar o vendedor: R$ %.2f\n", comissao);
+
+	FILE *file = fopen("comissoes.txt", "a");
+	if (file == NULL) {
+    	printf("Erro ao abrir o arquivo!\n");
+    return;
+}
+
+	fprintf(file, "Codigo do vendedor: %s\n", nome);
+	fprintf(file, "Valor da venda(R$): %.2f\n", venda);	
+	fprintf(file, "Taxa: %.2f %%\n", taxa);
+	fprintf(file, "Comissão a pagar o vendedor: R$ %.2f\n", comissao);
+	fprintf(file, "\n");
+	system("pause");
+	system("cls");
+
+
+	fclose(file);
+}
+
 void chefeMenu(User users[], int *userCount, Funcionario funcionarios[], int *funcionarioCount) {
     int option;
     char choice;
@@ -190,7 +249,8 @@ void chefeMenu(User users[], int *userCount, Funcionario funcionarios[], int *fu
         printf("1. Listar Funcionários\n");
         printf("2. Editar Funcionário\n");
         printf("3. Excluir Funcionário\n");
-        printf("4. Voltar ao Menu Principal\n");
+        printf("4. Comissão do funcionario\n");
+        printf("5. Voltar ao Menu Principal\n");
         printf("Escolha uma opção: ");
         scanf("%d", &option);
         clearInputBuffer();
@@ -225,6 +285,12 @@ void chefeMenu(User users[], int *userCount, Funcionario funcionarios[], int *fu
                 } while (choice == 'c');
                 break;
             case 4:
+            	do{
+            		commissionis();
+            		clearInputBuffer();
+                    system("cls");
+				}while (choice == 'c');
+            case 5:
                 return;
             default:
                 printf("Opção inválida! Tente novamente.\n");
@@ -233,21 +299,24 @@ void chefeMenu(User users[], int *userCount, Funcionario funcionarios[], int *fu
 }
 
 void displayProducts(const Product produtos[], int produtoCount) {
+	
     printf("Lista de Produtos:\n");
     for (int i = 0; i < produtoCount; i++) {
         printf("Produto %d:\n", i + 1);
         printf("Nome: %s\n", produtos[i].name);
         printf("ID: %s\n", produtos[i].ID);
         printf("Preço: %.2f\n", produtos[i].price);
-        printf("\t\n");
+        printf("Quantidade: %d\n", produtos[i].amount);
+        printf("Data de Validade: %s\n", produtos[i].expirationDate);
+        printf("\n");
     }
 }
 
 void searchProduct(const Product produtos[], int produtoCount) {
-    char searchName[PRODUCT_NAME_MAX_LENGTH];
+    char searchName[30];
     printf("Buscar Produto\n");
     printf("Digite o nome do produto: ");
-    scanf("%49s", searchName);
+    scanf("%29s", searchName);
     clearInputBuffer();
 
     for (int i = 0; i < produtoCount; i++) {
@@ -256,6 +325,8 @@ void searchProduct(const Product produtos[], int produtoCount) {
             printf("Nome: %s\n", produtos[i].name);
             printf("ID: %s\n", produtos[i].ID);
             printf("Preço: %.2f\n", produtos[i].price);
+            printf("Quantidade em estoque: %d\n", produtos[i].amount);
+            printf("Data de vencimento: %s\n", produtos[i].expirationDate);
             return;
         }
     }
@@ -264,9 +335,11 @@ void searchProduct(const Product produtos[], int produtoCount) {
 
 void editProduct(Product produtos[], int produtoCount) {
     int produtoIndex;
-    char name[PRODUCT_NAME_MAX_LENGTH];
+    char name[30];
     char ID[14];
     float price;
+    int amount;
+    char expirationDate[11];
 
     printf("Editar Produto\n");
     printf("Digite o índice do produto para editar (1-%d): ", produtoCount);
@@ -291,9 +364,19 @@ void editProduct(Product produtos[], int produtoCount) {
     scanf("%f", &price);
     clearInputBuffer();
 
+    printf("Nova Quantidade em estoque: ");
+    scanf("%d", &amount);
+    clearInputBuffer();
+
+    printf("Nova Data de vencimento (DD/MM/AAAA): ");
+    scanf("%10s", expirationDate);
+    clearInputBuffer();
+
     strcpy(produtos[produtoIndex].name, name);
     strcpy(produtos[produtoIndex].ID, ID);
     produtos[produtoIndex].price = price;
+    produtos[produtoIndex].amount = amount;
+    strcpy(produtos[produtoIndex].expirationDate, expirationDate);
 
     printf("Produto editado com sucesso!\n");
 }
@@ -333,6 +416,14 @@ void registerProduct() {
 
     printf("Crie um preço: ");
     scanf("%f", &produto.price);
+    clearInputBuffer();
+    
+    printf("Crie uma quantidade em estoque: ");
+    scanf("%d", &produto.amount);
+    clearInputBuffer();
+    
+     printf("Crie uma data de vencimento (DD/MM/AAAA): ");
+    scanf("%10s", produto.expirationDate);
     clearInputBuffer();
 
     if (produtoCount < MAX_PRODUCTS) {
@@ -499,29 +590,41 @@ void cashierMenu() {
     }
 }
 
-void login() {
-    int choice;
-    printf("\t\t\t\t\n");
-    printf("\n\t\t\t\t                   Login                          \n");
-    printf("\t\t\t\t\n");
-    printf("\t\t\t\t                   1- Login como Chefe             \n");
-    printf("\t\t\t\t                   2- Login como Caixa             \n");
-    printf("\t\t\t\t\n");
-    printf("\t\t\t\t                  Escolha uma opção: ");
-    scanf("%d", &choice);
-    clearInputBuffer();
-    system("cls");
+void login(User users[], int userCount, Funcionario funcionarios[], int funcionarioCount) {
+    char choice;
+    while (1) {
+        printf("Bem-vindo ao AtacaSystem!\n");
+        printf("Escolha o tipo de usuário:\n");
+        printf("1. Chefe\n");
+        printf("2. Caixa\n");
+        printf("3. Sair\n");
+        printf("Escolha uma opção: ");
+        int option;
+        scanf("%d", &option);
+        clearInputBuffer();
+        system("cls");
 
-    if (choice == 1) {
-        if (authenticateUser(chefeUsername, chefePassword)) {
-            chefeMenu(users, &userCount, funcionarios, &funcionarioCount);
-        } else {
-            printf("Autenticação falhou! Acesso negado.\n");
+        switch (option) {
+            case 1:
+                if (authenticateUser(chefeUsername, chefePassword)) {
+                    chefeMenu(users, &userCount, funcionarios, &funcionarioCount);
+                } else {
+                    printf("Falha na autenticação. Verifique suas credenciais.\n");
+                }
+                break;
+            case 2:
+                // Permite que apenas caixas registrados façam login
+                if (authenticateUser("caixa", "senha456")) {
+                    cashierMenu();
+                } else {
+                    printf("Falha na autenticação. Verifique suas credenciais.\n");
+                }
+                break;
+            case 3:
+                return;
+            default:
+                printf("Opção inválida! Tente novamente.\n");
         }
-    } else if (choice == 2) {
-        cashierMenu();
-    } else {
-        printf("Opção inválida!\n");
     }
 }
 
@@ -550,6 +653,51 @@ void registerEmployee() {
     }
 }
 
+void expirationAlert(const Product produtos[], int produtoCount) {
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    char today[11];
+    sprintf(today, "%02d/%02d/%04d", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
+
+    printf("Alerta de Vencimento\n");
+    for (int i = 0; i < produtoCount; i++) {
+        if (strcmp(produtos[i].expirationDate, today) == 0) {
+            printf("O produto %s está vencendo hoje!\n", produtos[i].name);
+		}
+	}
+}
+
+void inicializarFuncionarios(Funcionario funcionarios[], int *funcionarioCount) {
+    
+    strcpy(funcionarios[*funcionarioCount].name, "Bob Esponja");
+    strcpy(funcionarios[*funcionarioCount].username, "BOB");
+    strcpy(funcionarios[*funcionarioCount].password, "Gary");
+    (*funcionarioCount)++;
+
+    strcpy(funcionarios[*funcionarioCount].name, "Lula Molusco");
+    strcpy(funcionarios[*funcionarioCount].username, "Molusco");
+    strcpy(funcionarios[*funcionarioCount].password, "clarinete");
+    (*funcionarioCount)++;
+}
+
+void inicializarProdutos(Product produtos[], int *produtoCount) {
+    
+    strcpy(produtos[*produtoCount].name, "Nescau");
+    strcpy(produtos[*produtoCount].ID, "4002892222222");
+    produtos[*produtoCount].price = 6.99;
+    produtos[*produtoCount].amount = 50;
+    strcpy(produtos[*produtoCount].expirationDate, "2024-12-31");
+    (*produtoCount)++;
+
+    strcpy(produtos[*produtoCount].name, "Leite");
+    strcpy(produtos[*produtoCount].ID, "4003456789012");
+    produtos[*produtoCount].price = 5.0;
+    produtos[*produtoCount].amount = 30;
+    strcpy(produtos[*produtoCount].expirationDate, "2023-08-15");
+    (*produtoCount)++;
+
+}
+
 void option() {
     int choice;
     char choice_char;
@@ -570,7 +718,7 @@ void option() {
 
         switch (choice) {
             case 1:
-                login();
+                login(users, userCount, funcionarios, funcionarioCount); // Passando os parâmetros corretos
                 break;
 
             case 2:
@@ -591,8 +739,8 @@ void option() {
                 break;
 
             case 4:
-                printf("Saindo...\n");
-                return;
+                printf("Obrigado por usar o AtacaSystem!\n");
+                exit(EXIT_SUCCESS);
 
             default:
                 printf("Opção inválida\n");
@@ -610,8 +758,10 @@ void option() {
 
 int main() {
     setlocale(LC_ALL, "Portuguese_Brazil");
-
+    inicializarFuncionarios(funcionarios, &funcionarioCount);
+    inicializarProdutos(produtos, &produtoCount);
     printLogo();
+    
     option();
 
     return 0;
